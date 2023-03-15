@@ -3,52 +3,78 @@ from tkinter import messagebox
 import sys
 import time
 import threading
+import ctypes
 
-QUESTION = ["tkinter", "geometry", "widgets", "messagebox", "configure", 
-            "label", "column", "rowspan", "grid", "init"]
-class Application(Frame):
+#テキストファイルからお題を配列に格納する
+with open("text_data.txt", "r", encoding="utf-8") as f:
+    QUESTION = f.readline().split(",")
+class TypingGame:
     def __init__(self, master):
-        super().__init__(master)
-        self.pack()
+        self.master = master
+        self.master.title("タイピングゲーム")
+        master.geometry("700x400")
 
-        master.geometry("500x200")
-        master.title("typing game")
+        #メイン画面
+        self.frame_main = Frame(self.master)
+        self.frame_main.pack()
 
+        self.main_label_title = Label(self.frame_main, text="タイピングゲーム", font=("Helvetica", 16))
+        self.main_label_text = Label(self.frame_main, text="タイピングの速度を向上させよう!")
+        self.main_start_button = Button(self.frame_main, text="Start Game", command=self.start_game)
+        self.main_label_title.pack(pady=10)
+        self.main_label_text.pack()
+        self.main_start_button.pack(pady=10)
+
+        #ゲーム画面
+        self.frame_game = Frame(self.master)
+
+        #結果画面
+        self.frame_result = Frame(self.master)
+
+    def start_game(self):
         self.index = 0
-
         self.corrent_cnt = 0
+        #メイン画面を閉じる
+        self.frame_main.pack_forget()
 
-        self.create_widgets()
+        #ゲーム画面を表示
+        self.frame_game.pack()
 
-        t = threading.Thread(target=self.timer)
-        t.start()
+        #お題を表示
+        self.odai_label = Label(self.frame_game, text="お題：", font=("",20))
+        self.odai_label.grid(row=0, column=0)
+        self.question_label = Label(self.frame_game, text=QUESTION[self.index], width=30, anchor="w", font=("",20))
+        self.question_label.grid(row=0, column=1)
 
-        # Tkインスタンスに対してキーイベント処理を実装
-        self.master.bind("<KeyPress>", self.type_event)
-
-    # ウィジェットの生成と配置
-    def create_widgets(self):
-        self.q_label = Label(self, text="お題：", font=("",20))
-        self.q_label.grid(row=0, column=0)
-        self.q_label2 = Label(self, text=QUESTION[self.index], width=10, anchor="w", font=("",20))
-        self.q_label2.grid(row=0, column=1)
-        self.ans_label = Label(self, text="解答：", font=("",20))
+        #回答を表示
+        self.ans_label = Label(self.frame_game, text="解答：", font=("",20))
         self.ans_label.grid(row=1, column=0)
-        self.ans_label2 = Label(self, text="", width=10, anchor="w", font=("",20))
+        self.ans_label2 = Label(self.frame_game, text="", width=30, anchor="w", font=("",20))
         self.ans_label2.grid(row=1, column=1)
-        self.result_label = Label(self, text="正否ラベル", font=("",20))
+        self.ans_label2.focus_set()
+
+        #正否を表示
+        self.result_label = Label(self.frame_game, text="正否ラベル", font=("",20))
         self.result_label.grid(row=2, column=0, columnspan=2)
 
         #時間計測用のラベル
-        self.time_label = Label(self, text="", font=(" ", 20))
+        self.time_label = Label(self.frame_game, text="", font=(" ", 20))
         self.time_label.grid(row=3, column=0, columnspan=2)
+
+        #Tkインスタンスに対してキーイベント処理を実装
+        self.master.bind("<Key>", self.type_event)
+
+        #測定開始
+        t = threading.Thread(target=self.timer)
+        t.start()
+
 
 
     # キー入力時のイベント処理
     def type_event(self, event):
         #入力値がEnterの場合は答え合わせ
         if event.keysym == "Return":
-            if self.q_label2["text"] == self.ans_label2["text"]:
+            if self.question_label["text"] == self.ans_label2["text"]:
                 self.result_label.configure(text="正解!", fg = "red")
                 self.corrent_cnt += 1
             else:
@@ -62,18 +88,23 @@ class Application(Frame):
 
             if self.index == len(QUESTION):
                 self.flg = False
-                self.q_label2.configure(text="終了!")
+                self.result_label.configure(text="終了!")
                 messagebox.showinfo("リザルド", f"あなたのスコアは{self.corrent_cnt}/{self.index}問正解です。")
                 sys.exit(0)
-            self.q_label2.configure(text = QUESTION[self.index])
+            self.question_label.configure(text = QUESTION[self.index])
 
         elif event.keysym == "BackSpace":
             text = self.ans_label2["text"]
             self.ans_label2["text"] = text[:-1]
 
+        elif event.keysym == "Shift_L":
+            self.ans_label2["text"] += event.char.upper()
+
+        elif event.keysym == "Henkan_Mode":
+            self.ans_label2["text"] += event.char
         else:
             #入力値がEnter以外の場合は文字列入力としてラベルを追記する
-            self.ans_label2["text"] += event.keysym
+            self.ans_label2["text"] += event.char
 
     def timer(self):
         self.second = 0
@@ -85,5 +116,5 @@ class Application(Frame):
 
 if __name__ == "__main__":
     root = Tk()
-    Application(master=root)
+    TypingGame(master=root)
     root.mainloop()
