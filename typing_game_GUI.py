@@ -3,11 +3,17 @@ from tkinter import messagebox
 import sys
 import time
 import threading
-import ctypes
+import random
 
 #テキストファイルからお題を配列に格納する
 with open("text_data.txt", "r", encoding="utf-8") as f:
     QUESTION = f.readline().split(",")
+
+Landom_Question = [] #QUESTIONからランダムに問題を格納するための配列
+random.seed(random.randint(1, 1000))
+for i in range(20):
+    Landom_Question.append(QUESTION[random.randint(0, len(QUESTION) - 1)])
+
 class TypingGame:
     def __init__(self, master):
         self.master = master
@@ -32,8 +38,8 @@ class TypingGame:
         self.frame_result = Frame(self.master)
 
     def start_game(self):
-        self.index = 0
-        self.corrent_cnt = 0
+        self.index = 0       #お題を格納した配列に使う添え字
+        self.corrent_cnt = 0 #正解数をカウントする変数
         #メイン画面を閉じる
         self.frame_main.pack_forget()
 
@@ -43,7 +49,7 @@ class TypingGame:
         #お題を表示
         self.odai_label = Label(self.frame_game, text="お題：", font=("",20))
         self.odai_label.grid(row=0, column=0)
-        self.question_label = Label(self.frame_game, text=QUESTION[self.index], width=30, anchor="w", font=("",20))
+        self.question_label = Label(self.frame_game, text=Landom_Question[self.index] + "(1問目)", width=30, anchor="w", font=("",20))
         self.question_label.grid(row=0, column=1)
 
         #回答を表示
@@ -86,12 +92,17 @@ class TypingGame:
             #次の問題を出題
             self.index += 1
 
-            if self.index == len(QUESTION):
+            if self.index == 20:
                 self.flg = False
                 self.result_label.configure(text="終了!")
                 messagebox.showinfo("リザルド", f"あなたのスコアは{self.corrent_cnt}/{self.index}問正解です。")
-                sys.exit(0)
-            self.question_label.configure(text = QUESTION[self.index])
+                Landom_Question.clear()
+                random.seed(random.randint(1, 1000))
+                for i in range(20):
+                    Landom_Question.append(QUESTION[random.randint(0, len(QUESTION) - 1)])
+                self.frame_game.pack_forget()
+                self.frame_main.pack()
+            self.question_label.configure(text = Landom_Question[self.index] + "(" + str(self.index + 1) + "問目)")
 
         elif event.keysym == "BackSpace":
             text = self.ans_label2["text"]
