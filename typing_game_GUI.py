@@ -1,6 +1,5 @@
 from tkinter import *
 from tkinter import messagebox
-import sys
 import time
 import threading
 import random
@@ -49,7 +48,7 @@ class TypingGame:
         #お題を表示
         self.odai_label = Label(self.frame_game, text="お題：", font=("",20))
         self.odai_label.grid(row=0, column=0)
-        self.question_label = Label(self.frame_game, text=Landom_Question[self.index] + "(1問目)", width=30, anchor="w", font=("",20))
+        self.question_label = Label(self.frame_game, text=Landom_Question[self.index], width=30, anchor="w", font=("",20))
         self.question_label.grid(row=0, column=1)
 
         #回答を表示
@@ -66,6 +65,10 @@ class TypingGame:
         #時間計測用のラベル
         self.time_label = Label(self.frame_game, text="", font=(" ", 20))
         self.time_label.grid(row=3, column=0, columnspan=2)
+
+        #問題数を表示
+        self.questionCount_label = Label(self.frame_game, text = "1問目", font=(" ", 20))
+        self.questionCount_label.grid(row=4, column=0, columnspan=2)
 
         #Tkインスタンスに対してキーイベント処理を実装
         self.master.bind("<Key>", self.type_event)
@@ -102,7 +105,8 @@ class TypingGame:
                     Landom_Question.append(QUESTION[random.randint(0, len(QUESTION) - 1)])
                 self.frame_game.pack_forget()
                 self.frame_main.pack()
-            self.question_label.configure(text = Landom_Question[self.index] + "(" + str(self.index + 1) + "問目)")
+            self.question_label.configure(text = Landom_Question[self.index])
+            self.questionCount_label.configure(text = str(self.index + 1) + "問目")
 
         elif event.keysym == "BackSpace":
             text = self.ans_label2["text"]
